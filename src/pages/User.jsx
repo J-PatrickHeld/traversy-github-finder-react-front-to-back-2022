@@ -5,17 +5,27 @@ import Spinner from '../components/layout/Spinner'
 import RepoList from '../components/repos/RepoList'
 import {useParams} from 'react-router-dom'
 import GithubContext from '../context/github/GithubContext'
+import {getUser, getUserRepos} from '../context/github/GithubActions'
 
 function User() {
-    const {getUser, user, loading, getUserRepos, repos} = useContext(GithubContext)
+    const { user, loading, repos, dispatch } = useContext(GithubContext)
 
     const params = useParams()
 
+    //can't use async/await directly on useEffect
     useEffect(() => {
-        getUser(params.login)
-        getUserRepos(params.login)
-        // eslint-disable-next-line
-    }, [])
+        dispatch({type: 'SET_LOADING'})
+
+        const getUserData = async() => {
+            const userData = await getUser(params.login) //from URL
+            dispatch({type: 'GET_USER', payload: userData})
+
+            const userRepoData = await getUserRepos(params.login) //from URL
+            dispatch({type: 'GET_REPOS', payload: userRepoData})
+        }
+
+        getUserData()
+    }, [dispatch, params.login])
 
     const {
         name,
